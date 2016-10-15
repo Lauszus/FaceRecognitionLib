@@ -1,0 +1,4 @@
+*.o
+eigenfaces/
+matches/
+main
