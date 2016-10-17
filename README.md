@@ -10,22 +10,22 @@ The code was tested using images from the [AT&T Facedatabase](http://www.cl.cam.
 
 The [Eigenfaces.m](Eigenfaces.m) Matlab script was used for development and was then ported to C++.
 
-If you want to convert the PGM images, first install [ImageMagick](http://www.imagemagick.org) and then run the [convert_pgm.sh](convert_pgm.sh) script. The output will look something like this:
+If you want to convert the PGM image run the [convert_pgm.sh](convert_pgm.sh) script. The output will look something like this:
 
 ![](eigenfaces.png) ![](matches.png)
 
-In order to build the C++ code you need to install Eigen3:
+In order to build the C++ code and run the script you need to install [Eigen3](http://eigen.tuxfamily.org) and [ImageMagick](http://www.imagemagick.org):
 
 Mac:
 
 ```bash
-brew install eigen
+brew install eigen imagemagick
 ```
 
 Ubuntu:
 
 ```bash
-sudo apt-get install libeigen3-dev
+sudo apt-get install libeigen3-dev imagemagick
 ```
 
 The [RedSVD](https://github.com/ntessore/redsvd-h) library is included as a submodule.
