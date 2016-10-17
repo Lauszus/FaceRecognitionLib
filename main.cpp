@@ -18,6 +18,7 @@
 #include <iostream>
 #include <numeric>
 #include <vector>
+#include <sys/stat.h>
 
 #include <Eigen/Dense> // http://eigen.tuxfamily.org/index.php?title=Main_Page
 #include <RedSVD/RedSVD-h> // https://github.com/ntessore/redsvd-h
@@ -69,6 +70,18 @@ static void saveMatrixAsPgm(const char *filename, const MatrixXf &A) {
     savePGMfile(filename, &img);
 }
 
+static MatrixXf project(const MatrixXf &U, const MatrixXf &X, const VectorXf &mu) {
+    return U.transpose()*(X.colwise() - mu); // Project X onto Eigenface subspace
+}
+
+static MatrixXf reconstructFace(const MatrixXf &U, const MatrixXf &W, const VectorXf &mu) {
+    return (U*W).colwise() + mu; // Reconstruct face
+}
+
+static VectorXf euclideanDist(const MatrixXf &W_all, const VectorXf &W) {
+    return ((W_all.colwise() - W)/n_pixels).colwise().norm()/sqrt(K);
+}
+
 static void trainEigenfaces(MatrixXf &images, VectorXf &mu, MatrixXf &U, MatrixXf &W_all) {
     cout << "Loading images" << endl;
     images = MatrixXf(n_pixels, n_images); // Pre-allocate storage for images
@@ -87,8 +100,9 @@ static void trainEigenfaces(MatrixXf &images, VectorXf &mu, MatrixXf &U, MatrixX
     mu = images.rowwise().mean(); // Calculate the mean along each row
 
     MatrixXf images_mu = images.colwise() - mu; // Subtract means from all columns before doing SVD
-#if n_pixels < n_images
+
     cout << "Calculating the covariance matrix" << endl;
+#if n_pixels < n_images
     MatrixXf cov_matrix = images_mu*images_mu.transpose();
     cout << "cov_matrix: " << cov_matrix.rows() << " x " << cov_matrix.cols() << endl;
 
@@ -98,7 +112,6 @@ static void trainEigenfaces(MatrixXf &images, VectorXf &mu, MatrixXf &U, MatrixX
     U = svd.matrixU();
     cout << "U: " << U.rows() << " x " << U.cols() << " norm: " << U.norm() << endl;
 #else // Method based on "Eigenfaces for recognition" by M. Turk and A. Pentland
-    cout << "Calculating the covariance matrix" << endl;
     MatrixXf cov_matrix = images_mu.transpose()*images_mu;
     cout << "cov_matrix: " << cov_matrix.rows() << " x " << cov_matrix.cols() << endl;
 
@@ -115,6 +128,7 @@ static void trainEigenfaces(MatrixXf &images, VectorXf &mu, MatrixXf &U, MatrixX
     cout << "U: " << U.rows() << " x " << U.cols() << " norm: " << U.norm() << endl;
 #endif
 
+    mkdir("eigenfaces", 0755);
     for (int i = 0; i < K; i++) { // Save Eigenfaces as PGM images
         Map<MatrixXf> Eigenface(U.block<n_pixels, 1>(0, i).data(), M, N); // Extract Eigenface
         //cout << "Eigenface: " << Eigenface.rows() << " x " << Eigenface.cols() << endl;
@@ -124,9 +138,9 @@ static void trainEigenfaces(MatrixXf &images, VectorXf &mu, MatrixXf &U, MatrixX
     }
 
     cout << "Calculate weights for all images" << endl;
-    W_all = U.transpose()*images_mu;
+    W_all = project(U, images, mu);
     cout << "W_all: " << W_all.rows() << " x " << W_all.cols() << endl;
-    MatrixXf face_all = (U*W_all).colwise() + mu; // Add means back again
+    MatrixXf face_all = reconstructFace(U, W_all, mu);
     //cout << "face_all: " << face_all.rows() << " x " << face_all.cols() << endl;
 
     cout << "Done training" << endl;
@@ -146,18 +160,6 @@ vector<size_t> sortIndexes(const VectorType &v) {
     return idx;
 }
 
-static VectorXf project(const MatrixXf &U, MatrixXf &X, const VectorXf &mu) {
-    return U.transpose()*(Map<VectorXf>(X.data(), X.size()) - mu); // Flatten image and project onto Eigenfaces
-}
-
-static VectorXf reconstructFace(const MatrixXf &U, const VectorXf &W, const VectorXf &mu) {
-    return U*W + mu; // Reconstruct face
-}
-
-static VectorXf euclideanDist(const MatrixXf &W_all, const VectorXf &W) {
-    return ((W_all.colwise() - W)/n_pixels).colwise().norm()/sqrt(K);
-}
-
 int main(void) {
     MatrixXf images, U, W_all;
     VectorXf mu;
@@ -167,7 +169,7 @@ int main(void) {
     MatrixXf target = readPgmAsMatrix("../orl_faces/s3/8.pgm"); // Load a random image from the database
 
     cout << "Reconstructing Faces" << endl;
-    VectorXf W = project(U, target, mu);
+    VectorXf W = project(U, Map<VectorXf>(target.data(), target.size()), mu); // Flatten image and project onto Eigenfaces
     VectorXf face = reconstructFace(U, W, mu);
     //cout << W.format(OctaveFmt) << endl;
 
@@ -178,6 +180,7 @@ int main(void) {
     vector<size_t> idx = sortIndexes(dist);
     //for (auto i : idx) cout << "dist[" << i << "]: " << dist(i) << endl;
 
+    mkdir("matches", 0755);
     for (int i = 0; i < 9; i++) { // Save first nine matches
         cout << "dist[" << idx[i] << "]: " << dist(idx[i]) << endl;
         char filename[50];
@@ -196,7 +199,7 @@ int main(void) {
             char filename[50];
             sprintf(filename, "../orl_faces/s%u/%u.pgm", i + 1, j + 1);
             target = readPgmAsMatrix(filename);
-            W = project(U, target, mu);
+            W = project(U, Map<VectorXf>(target.data(), target.size()), mu); // Flatten image and project onto Eigenfaces
             dist = euclideanDist(W_all, W);
             idx = sortIndexes(dist);
             //cout << "dist[" << idx[0] << "]: " << dist(idx[0]) << endl;

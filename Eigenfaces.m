@@ -23,13 +23,15 @@ images_mu = bsxfun(@minus, images, mu); % Subtract means from all columns before
 close all;
 
 K = 15;
+disp('Calculating the covariance matrix')
 if n_images < n_pixels
-    disp('Calculating the covariance matrix')
     cov_matrix = images_mu'*images_mu; % Optimised SVD analysis
 
     if 1
+        disp('Calculating the SVD')
         [U,S,V] = svds(cov_matrix,K); % Singular-Value Decomposition
     else
+        disp('Calculating Eigenvectors')
         [V,D] = eig(cov_matrix);
         [D,i] = sort(diag(D), 'descend'); % Sort by Eigenvalues
         V = V(:,i);
@@ -45,11 +47,11 @@ if n_images < n_pixels
         U(:,i) = U(:,i) / norm(U(:,i));
     end
 else
-    disp('Calculating the covariance matrix')
     cov_matrix = images_mu*images_mu';
     disp('Calculating the SVD')
     [U,S,V] = svds(cov_matrix,K); % Calculate K largest singular values
 end
+norm(U,'fro')
 
 figure; plot(diag(S), '*');
 title('Eigenfaces singular values');
