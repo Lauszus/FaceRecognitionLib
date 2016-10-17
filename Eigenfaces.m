@@ -86,6 +86,10 @@ W = U'*(target - mu); % Project target image onto Eigenfaces
 face = U*W + mu; % Reconstruct face
 figure; imagesc(reshape(face,M,N)); colormap('gray');
 
+disp('Calculate distance to face space');
+face_dist = (sqrt(sum((bsxfun(@minus, sum(face_all,2), face)/n_pixels).^2)')/sqrt(K));
+fprintf('Face dist: %f\n', face_dist);
+
 disp('Calculate normalized Euclidean distance');
 dist = (sqrt(sum((bsxfun(@minus, W_all, W)/n_pixels).^2)')/sqrt(K));
 
