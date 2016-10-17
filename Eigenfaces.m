@@ -22,8 +22,8 @@ images_mu = bsxfun(@minus, images, mu); % Subtract means from all columns before
 %%
 close all;
 
-if 1
-    K = 15;
+K = 15;
+if n_images < n_pixels
     disp('Calculating the covariance matrix')
     cov_matrix = images_mu'*images_mu; % Optimised SVD analysis
 
@@ -40,10 +40,11 @@ if 1
     end
     U = images_mu*V; % Calculate the actual Eigenvalues of the true coveriance matrix
 
-    %V = bsxfun(@rdivide, V, (diag_S.^(-1/2))');
-    U = U / norm(U); % Normalize Eigenvector
+    % Normalize Eigenvectors
+    for i=1:K
+        U(:,i) = U(:,i) / norm(U(:,i));
+    end
 else
-    K = 15;
     disp('Calculating the covariance matrix')
     cov_matrix = images_mu*images_mu';
     disp('Calculating the SVD')

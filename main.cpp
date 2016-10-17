@@ -87,7 +87,7 @@ static void trainEigenfaces(MatrixXf &images, VectorXf &mu, MatrixXf &U, MatrixX
     mu = images.rowwise().mean(); // Calculate the mean along each row
 
     MatrixXf images_mu = images.colwise() - mu; // Subtract means from all columns before doing SVD
-#if 0 // Slow approach
+#if n_pixels < n_images
     cout << "Calculating the covariance matrix" << endl;
     MatrixXf cov_matrix = images_mu*images_mu.transpose();
     cout << "cov_matrix: " << cov_matrix.rows() << " x " << cov_matrix.cols() << endl;
@@ -96,23 +96,23 @@ static void trainEigenfaces(MatrixXf &images, VectorXf &mu, MatrixXf &U, MatrixX
     RedSVD::RedSVD<MatrixXf> svd(cov_matrix, K); // Calculate K largest singular values
     //cout << svd.singularValues() << endl;
     U = svd.matrixU();
-    cout << "U: " << U.rows() << " x " << U.cols() << endl;
-#else // Optimised SVD analysis
+    cout << "U: " << U.rows() << " x " << U.cols() << " norm: " << U.norm() << endl;
+#else // Method based on "Eigenfaces for recognition" by M. Turk and A. Pentland
     cout << "Calculating the covariance matrix" << endl;
     MatrixXf cov_matrix = images_mu.transpose()*images_mu;
     cout << "cov_matrix: " << cov_matrix.rows() << " x " << cov_matrix.cols() << endl;
 
     cout << "Calculating the SVD" << endl;
-    RedSVD::RedSVD<MatrixXf> svd(cov_matrix, K); // Calculate K largest singular values
-    //JacobiSVD<MatrixXf> svd(cov_matrix, ComputeThinV); // Calculate K largest singular values
+    //RedSVD::RedSVD<MatrixXf> svd(cov_matrix, K); // Calculate K largest singular values
+    JacobiSVD<MatrixXf> svd(cov_matrix, ComputeThinV); // Calculate K largest singular values
     //VectorXf S = svd.singularValues().block<K, 1>(0,0); // Extract K largest singular values
     //cout << S.format(OctaveFmt) << endl;
     MatrixXf V = svd.matrixV().block<n_images, K>(0,0); // Extract K largest values
 
-    cout << "V: " << V.rows() << " x " << V.cols() << endl;
+    cout << "V: " << V.rows() << " x " << V.cols() << " norm: " << V.norm() << endl;
     U = images_mu*V; // Calculate the actual Eigenvalues of the true coveriance matrix
-    U /= U.norm(); // Normalize
-    cout << "U: " << U.rows() << " x " << U.cols() << endl;
+    U.colwise().normalize(); // Normalize Eigenvectors
+    cout << "U: " << U.rows() << " x " << U.cols() << " norm: " << U.norm() << endl;
 #endif
 
     for (int i = 0; i < K; i++) { // Save Eigenfaces as PGM images
