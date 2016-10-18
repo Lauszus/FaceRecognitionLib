@@ -10,7 +10,8 @@ CXXFLAGS += `pkg-config --cflags eigen3`
 # Include RedSVD library
 CXXFLAGS += -I./RedSVD/include
 
-# Extra CXXFLAGS
+# No debugging
+# CFLAGS += -DNDEBUG
 # CXXFLAGS += -DNDEBUG
 
 # Change this to the name of your main file

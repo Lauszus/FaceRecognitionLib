@@ -40,7 +40,8 @@ static const uint8_t n_person = 40;
 static const uint8_t n_img_pr_person = 10;
 static const uint16_t n_images = n_img_pr_person*n_person;
 
-static const uint8_t K = 15; // Number of singular values
+static const float cumulativeEnergyThreshold = .9f; // Determine the number of principal components required to model 90 % of data variance
+static uint16_t K = 15; // Number of singular values used, this might change based on cumulative energy threshold
 
 static MatrixXf readPgmAsMatrix(const char *filename) {
     PGMImage imgRaw;
@@ -107,26 +108,43 @@ static void trainEigenfaces(MatrixXf &images, VectorXf &mu, MatrixXf &U, MatrixX
     cout << "cov_matrix: " << cov_matrix.rows() << " x " << cov_matrix.cols() << endl;
 
     cout << "Calculating the SVD" << endl;
-    RedSVD::RedSVD<MatrixXf> svd(cov_matrix, K); // Calculate K largest singular values
-    //cout << svd.singularValues() << endl;
+    RedSVD::RedSVD<MatrixXf> svd(cov_matrix, K); // Calculate K largest singular values, using the JacobiSVD function with this size of covariance matrix is extremely slow, so beware!
+    //cout << svd.singularValues().format(OctaveFmt) << endl;
     U = svd.matrixU();
-    cout << "U: " << U.rows() << " x " << U.cols() << " norm: " << U.norm() << endl;
 #else // Method based on "Eigenfaces for recognition" by M. Turk and A. Pentland
     MatrixXf cov_matrix = images_mu.transpose()*images_mu;
     cout << "cov_matrix: " << cov_matrix.rows() << " x " << cov_matrix.cols() << endl;
 
     cout << "Calculating the SVD" << endl;
-    //RedSVD::RedSVD<MatrixXf> svd(cov_matrix, K); // Calculate K largest singular values
-    JacobiSVD<MatrixXf> svd(cov_matrix, ComputeThinV); // Calculate K largest singular values
-    //VectorXf S = svd.singularValues().block<K, 1>(0,0); // Extract K largest singular values
+    JacobiSVD<MatrixXf> svd(cov_matrix, ComputeThinV); // Calculate singular values
+
+#if 1 // Calculate K based on cumulative energy instead of using hardcoded value - see: https://en.wikipedia.org/wiki/Principal_component_analysis#Compute_the_cumulative_energy_content_for_each_eigenvector
+    VectorXf S = svd.singularValues(); // Get singular values
     //cout << S.format(OctaveFmt) << endl;
-    MatrixXf V = svd.matrixV().block<n_images, K>(0,0); // Extract K largest values
+    VectorXf cumulativeEnergy(S.size());
+    cumulativeEnergy(0) = S(0);
+    for (int i = 1; i < S.size(); i++)
+        cumulativeEnergy(i) = cumulativeEnergy(i - 1) + S(i); // Calculate the cumulative sum of the singular values
+    //cout << cumulativeEnergy.format(OctaveFmt) << endl;
+    K = 1; // Make sure that we have at least two Eigenfaces - note that we add one to this value below
+    for (; K < cumulativeEnergy.size(); K++) {
+        float energy = cumulativeEnergy(K) / cumulativeEnergy(cumulativeEnergy.size() - 1); // Convert cumulative energy into percentage
+        //cout << energy << endl;
+        if (energy >= cumulativeEnergyThreshold) {
+            K++; // Since indices start at 0 we need to add one to the K value
+            break;
+        }
+    }
+    cout << "Extracting " << K << " Eigenfaces. Containing " << cumulativeEnergyThreshold << " % of the energy" << endl;
+#endif
+
+    MatrixXf V = svd.matrixV().block(0, 0, n_images, K); // Extract K largest values
 
     cout << "V: " << V.rows() << " x " << V.cols() << " norm: " << V.norm() << endl;
-    U = images_mu*V; // Calculate the actual Eigenvalues of the true coveriance matrix
+    U = images_mu*V; // Calculate the actual Eigenvectors of the true covariance matrix
     U.colwise().normalize(); // Normalize Eigenvectors
-    cout << "U: " << U.rows() << " x " << U.cols() << " norm: " << U.norm() << endl;
 #endif
+    cout << "U: " << U.rows() << " x " << U.cols() << " norm: " << U.norm() << endl;
 
     mkdir("eigenfaces", 0755);
     for (int i = 0; i < K; i++) { // Save Eigenfaces as PGM images

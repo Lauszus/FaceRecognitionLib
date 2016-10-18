@@ -22,31 +22,39 @@ images_mu = bsxfun(@minus, images, mu); % Subtract means from all columns before
 %%
 close all;
 
-K = 15;
 disp('Calculating the covariance matrix')
 if n_images < n_pixels
     cov_matrix = images_mu'*images_mu; % Optimised SVD analysis
 
     if 1
         disp('Calculating the SVD')
-        [U,S,V] = svds(cov_matrix,K); % Singular-Value Decomposition
+        [U,S,V] = svd(cov_matrix); % Singular-Value Decomposition
     else
         disp('Calculating Eigenvectors')
         [V,D] = eig(cov_matrix);
         [D,i] = sort(diag(D), 'descend'); % Sort by Eigenvalues
         V = V(:,i);
         S = diag(D);
-
-        V = V(:,1:K);
-        S = S(1:K,:);
     end
-    U = images_mu*V; % Calculate the actual Eigenvalues of the true coveriance matrix
+
+    % Calculate K based on cumulative energy instead of using hardcoded value
+    % See: https://en.wikipedia.org/wiki/Principal_component_analysis#Compute_the_cumulative_energy_content_for_each_eigenvector
+    cumulativeEnergy = cumsum(diag(S)); % Calculate the cumulative sum of the singular values
+    cumulativeEnergy = cumulativeEnergy/cumulativeEnergy(end); % Convert to percentage
+    K = max(2, find(cumulativeEnergy >= .9,1,'first')) % Find the index where the cumulative energy is above or equal 90 %
+
+    % Only keep K number of components
+    V = V(:,1:K);
+    S = S(1:K,1:K);
+
+    U = images_mu*V; % Calculate the actual Eigenvectors of the true covariance matrix
 
     % Normalize Eigenvectors
     for i=1:K
         U(:,i) = U(:,i) / norm(U(:,i));
     end
 else
+    K = 15;
     cov_matrix = images_mu*images_mu';
     disp('Calculating the SVD')
     [U,S,V] = svds(cov_matrix,K); % Calculate K largest singular values
@@ -55,11 +63,6 @@ norm(U,'fro')
 
 figure; plot(diag(S), '*');
 title('Eigenfaces singular values');
-
-dist_S = zeros(K-1,1);
-for i=1:K-1
-    dist_S(i) = S(i,i) - S(i+1,i+1); % TODO: Use for determine value of K
-end
 
 eigenfaces = reshape(U,M,N,K); % Get Eigenfaces
 
