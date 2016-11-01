@@ -33,10 +33,14 @@ void PCA::train(MatrixXf &images) {
 
     MatrixXf images_mu = images.colwise() - mu; // Subtract means from all columns before doing SVD
 
+#ifndef NDEBUG
     cout << "Calculating the covariance matrix" << endl;
+#endif
 #if n_pixels < n_images
     MatrixXf cov_matrix = images_mu*images_mu.transpose();
+#ifndef NDEBUG
     cout << "cov_matrix: " << cov_matrix.rows() << " x " << cov_matrix.cols() << endl;
+#endif
 
     cout << "Calculating the SVD" << endl;
     RedSVD::RedSVD<MatrixXf> svd(cov_matrix, K); // Calculate K largest singular values, using the JacobiSVD function with this size of covariance matrix is extremely slow, so beware!
@@ -44,9 +48,11 @@ void PCA::train(MatrixXf &images) {
     U = svd.matrixU();
 #else // Method based on "Eigenfaces for recognition" by M. Turk and A. Pentland
     MatrixXf cov_matrix = images_mu.transpose()*images_mu;
+#ifndef NDEBUG
     cout << "cov_matrix: " << cov_matrix.rows() << " x " << cov_matrix.cols() << endl;
 
     cout << "Calculating the SVD" << endl;
+#endif
     JacobiSVD<MatrixXf> svd(cov_matrix, ComputeThinV); // Calculate singular values
 
 #if 1 // Calculate K based on cumulative energy instead of using hardcoded value - see: https://en.wikipedia.org/wiki/Principal_component_analysis#Compute_the_cumulative_energy_content_for_each_eigenvector
@@ -66,21 +72,31 @@ void PCA::train(MatrixXf &images) {
             break;
         }
     }
+#ifndef NDEBUG
     cout << "Extracting " << K << " Eigenfaces. Containing " << cumulativeEnergyThreshold << " % of the energy" << endl;
+#endif
 #endif
     // MatrixXf D = S.block(0, 0, n_images, K); // Extract K largest values
     // D = D*D / n_pixels; // Calculate eigenvalues
     MatrixXf V = svd.matrixV().block(0, 0, n_images, K); // Extract K largest values
 
+#ifndef NDEBUG
     cout << "V: " << V.rows() << " x " << V.cols() << " norm: " << V.norm() << endl;
+#endif
     U = images_mu*V; // Calculate the actual Eigenvectors of the true covariance matrix
     U.colwise().normalize(); // Normalize Eigenvectors
 #endif
+#ifndef NDEBUG
     cout << "U: " << U.rows() << " x " << U.cols() << " norm: " << U.norm() << endl;
+#endif
 
+#ifndef NDEBUG
     cout << "Calculate weights for all images" << endl;
+#endif
     W_all = project(images);
+#ifndef NDEBUG
     cout << "W_all: " << W_all.rows() << " x " << W_all.cols() << endl;
+#endif
     face_all = reconstructFace(W_all);
     //cout << "face_all: " << face_all.rows() << " x " << face_all.cols() << endl;
 }
