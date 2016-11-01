@@ -28,35 +28,23 @@ using namespace Eigen;
 
 class PCA {
 public:
-    PCA(){};
+    PCA() {};
 
-    void train(MatrixXf &images);
+    /**
+     * Computes the Eigenvectors of the images using PCA.
+     * @param images        Each images is represented as a column vector.
+     * @param numComponents Number of singular values used. If this is set to -1, a cumulative energy threshold of 90 % is used.
+     */
+    void compute(MatrixXf &images, int16_t numComponents = -1);
     MatrixXf project(const MatrixXf &X);
     MatrixXf reconstructFace(const MatrixXf &W);
-    VectorXf euclideanDist(const VectorXf &W);
 
-    template<typename VectorType>
-    vector<size_t> sortIndexes(const VectorType &v) {
-        // Based on: http://stackoverflow.com/a/12399290/2175837
-        // Initialize original index locations
-        vector<size_t> idx(v.size());
-        iota(idx.begin(), idx.end(), 0);
-
-        // Sort indexes based on comparing values in v
-        sort(idx.begin(), idx.end(),
-            [&v](size_t i1, size_t i2) { return v[i1] < v[i2]; });
-
-        return idx;
-    }
-
-    MatrixXf U; // Eigenfaces
-    W_all, face_all; // Total weights and faces
+    MatrixXf U; // Eigenvectors
     VectorXf mu; // Mean along each row
+    int16_t K; // Number of singular values used, this might be calculated based on cumulative energy threshold
 
+protected:
     const float cumulativeEnergyThreshold = .9f; // Determine the number of principal components required to model 90 % of data variance
-    uint16_t K = 15; // Number of singular values used, this might change based on cumulative energy threshold
-
-private:
     uint16_t n_pixels, n_images;
 };
 

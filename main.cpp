@@ -20,10 +20,10 @@
 
 #include <Eigen/Dense> // http://eigen.tuxfamily.org
 
-#include "PCA.h"
+#include "Eigenfaces.h"
 #include "pgm.h"
 
-PCA pca;
+Eigenfaces eigenfaces;
 
 using namespace std;
 using namespace Eigen;
@@ -83,11 +83,11 @@ static void trainEigenfaces(MatrixXf &images) {
         }
     }
 
-    pca.train(images);
+    eigenfaces.compute(images);
 
     mkdir("eigenfaces", 0755);
-    for (int i = 0; i < pca.K; i++) { // Save Eigenfaces as PGM images
-        Map<MatrixXf> Eigenface(pca.U.block<n_pixels, 1>(0, i).data(), M, N); // Extract Eigenface
+    for (int i = 0; i < eigenfaces.K; i++) { // Save Eigenfaces as PGM images
+        Map<MatrixXf> Eigenface(eigenfaces.U.block<n_pixels, 1>(0, i).data(), M, N); // Extract Eigenface
         //cout << "Eigenface: " << Eigenface.rows() << " x " << Eigenface.cols() << endl;
         char filename[50];
         sprintf(filename, "eigenfaces/eigenface%u.pgm", i);
@@ -104,15 +104,15 @@ int main(void) {
     MatrixXf target = readPgmAsMatrix("../orl_faces/s3/8.pgm"); // Load a random image from the database
 
     cout << "Reconstructing Faces" << endl;
-    VectorXf W = pca.project(Map<VectorXf>(target.data(), target.size())); // Flatten image and project onto Eigenfaces
-    VectorXf face = pca.reconstructFace(W);
+    VectorXf W = eigenfaces.project(Map<VectorXf>(target.data(), target.size())); // Flatten image and project onto Eigenfaces
+    VectorXf face = eigenfaces.reconstructFace(W);
     //cout << W.format(OctaveFmt) << endl;
 
     cout << "Calculate normalized Euclidean distance" << endl;
-    VectorXf dist = pca.euclideanDist(W);
+    VectorXf dist = eigenfaces.euclideanDist(W);
     //cout << "dist: " << dist.rows() << " x " << dist.cols() << endl;
 
-    vector<size_t> idx = pca.sortIndexes(dist);
+    vector<size_t> idx = eigenfaces.sortIndexes(dist);
     //for (auto i : idx) cout << "dist[" << i << "]: " << dist(i) << endl;
 
     mkdir("matches", 0755);
@@ -134,9 +134,9 @@ int main(void) {
             char filename[50];
             sprintf(filename, "../orl_faces/s%u/%u.pgm", i + 1, j + 1);
             target = readPgmAsMatrix(filename);
-            W = pca.project(Map<VectorXf>(target.data(), target.size())); // Flatten image and project onto Eigenfaces
-            dist = pca.euclideanDist(W);
-            idx = pca.sortIndexes(dist);
+            W = eigenfaces.project(Map<VectorXf>(target.data(), target.size())); // Flatten image and project onto Eigenfaces
+            dist = eigenfaces.euclideanDist(W);
+            idx = eigenfaces.sortIndexes(dist);
             //cout << "dist[" << idx[0] << "]: " << dist(idx[0]) << endl;
             if ((int)idx[0] != i*n_img_pr_person+j) {
                 cout << "Wrong match: " << i*n_img_pr_person+j << " should be: " << idx[0] << endl;
