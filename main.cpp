@@ -16,14 +16,14 @@
 */
 
 #include <iostream>
-#include <numeric>
-#include <vector>
 #include <sys/stat.h>
 
-#include <Eigen/Dense> // http://eigen.tuxfamily.org/index.php?title=Main_Page
-#include <RedSVD/RedSVD-h> // https://github.com/ntessore/redsvd-h
+#include <Eigen/Dense> // http://eigen.tuxfamily.org
 
+#include "PCA.h"
 #include "pgm.h"
+
+PCA pca;
 
 using namespace std;
 using namespace Eigen;
@@ -39,9 +39,6 @@ static const uint16_t n_pixels = M*N;
 static const uint8_t n_person = 40;
 static const uint8_t n_img_pr_person = 10;
 static const uint16_t n_images = n_img_pr_person*n_person;
-
-static const float cumulativeEnergyThreshold = .9f; // Determine the number of principal components required to model 90 % of data variance
-static uint16_t K = 15; // Number of singular values used, this might change based on cumulative energy threshold
 
 static MatrixXf readPgmAsMatrix(const char *filename) {
     PGMImage imgRaw;
@@ -71,19 +68,7 @@ static void saveMatrixAsPgm(const char *filename, const MatrixXf &A) {
     savePGMfile(filename, &img);
 }
 
-static MatrixXf project(const MatrixXf &U, const MatrixXf &X, const VectorXf &mu) {
-    return U.transpose()*(X.colwise() - mu); // Project X onto Eigenface subspace
-}
-
-static MatrixXf reconstructFace(const MatrixXf &U, const MatrixXf &W, const VectorXf &mu) {
-    return (U*W).colwise() + mu; // Reconstruct face
-}
-
-static VectorXf euclideanDist(const MatrixXf &W_all, const VectorXf &W) {
-    return ((W_all.colwise() - W)/n_pixels).colwise().norm()/sqrt(K);
-}
-
-static void trainEigenfaces(MatrixXf &images, VectorXf &mu, MatrixXf &U, MatrixXf &W_all) {
+static void trainEigenfaces(MatrixXf &images) {
     cout << "Loading images" << endl;
     images = MatrixXf(n_pixels, n_images); // Pre-allocate storage for images
     cout << "images: " << images.rows() << " x " << images.cols() << endl;
@@ -98,104 +83,36 @@ static void trainEigenfaces(MatrixXf &images, VectorXf &mu, MatrixXf &U, MatrixX
         }
     }
 
-    mu = images.rowwise().mean(); // Calculate the mean along each row
-
-    MatrixXf images_mu = images.colwise() - mu; // Subtract means from all columns before doing SVD
-
-    cout << "Calculating the covariance matrix" << endl;
-#if n_pixels < n_images
-    MatrixXf cov_matrix = images_mu*images_mu.transpose();
-    cout << "cov_matrix: " << cov_matrix.rows() << " x " << cov_matrix.cols() << endl;
-
-    cout << "Calculating the SVD" << endl;
-    RedSVD::RedSVD<MatrixXf> svd(cov_matrix, K); // Calculate K largest singular values, using the JacobiSVD function with this size of covariance matrix is extremely slow, so beware!
-    //cout << svd.singularValues().format(OctaveFmt) << endl;
-    U = svd.matrixU();
-#else // Method based on "Eigenfaces for recognition" by M. Turk and A. Pentland
-    MatrixXf cov_matrix = images_mu.transpose()*images_mu;
-    cout << "cov_matrix: " << cov_matrix.rows() << " x " << cov_matrix.cols() << endl;
-
-    cout << "Calculating the SVD" << endl;
-    JacobiSVD<MatrixXf> svd(cov_matrix, ComputeThinV); // Calculate singular values
-
-#if 1 // Calculate K based on cumulative energy instead of using hardcoded value - see: https://en.wikipedia.org/wiki/Principal_component_analysis#Compute_the_cumulative_energy_content_for_each_eigenvector
-    VectorXf S = svd.singularValues(); // Get singular values
-    //cout << S.format(OctaveFmt) << endl;
-    VectorXf cumulativeEnergy(S.size());
-    cumulativeEnergy(0) = S(0);
-    for (int i = 1; i < S.size(); i++)
-        cumulativeEnergy(i) = cumulativeEnergy(i - 1) + S(i); // Calculate the cumulative sum of the singular values
-    //cout << cumulativeEnergy.format(OctaveFmt) << endl;
-    K = 1; // Make sure that we have at least two Eigenfaces - note that we add one to this value below
-    for (; K < cumulativeEnergy.size(); K++) {
-        float energy = cumulativeEnergy(K) / cumulativeEnergy(cumulativeEnergy.size() - 1); // Convert cumulative energy into percentage
-        //cout << energy << endl;
-        if (energy >= cumulativeEnergyThreshold) {
-            K++; // Since indices start at 0 we need to add one to the K value
-            break;
-        }
-    }
-    cout << "Extracting " << K << " Eigenfaces. Containing " << cumulativeEnergyThreshold << " % of the energy" << endl;
-#endif
-
-    MatrixXf V = svd.matrixV().block(0, 0, n_images, K); // Extract K largest values
-
-    cout << "V: " << V.rows() << " x " << V.cols() << " norm: " << V.norm() << endl;
-    U = images_mu*V; // Calculate the actual Eigenvectors of the true covariance matrix
-    U.colwise().normalize(); // Normalize Eigenvectors
-#endif
-    cout << "U: " << U.rows() << " x " << U.cols() << " norm: " << U.norm() << endl;
+    pca.train(images);
 
     mkdir("eigenfaces", 0755);
-    for (int i = 0; i < K; i++) { // Save Eigenfaces as PGM images
-        Map<MatrixXf> Eigenface(U.block<n_pixels, 1>(0, i).data(), M, N); // Extract Eigenface
+    for (int i = 0; i < pca.K; i++) { // Save Eigenfaces as PGM images
+        Map<MatrixXf> Eigenface(pca.U.block<n_pixels, 1>(0, i).data(), M, N); // Extract Eigenface
         //cout << "Eigenface: " << Eigenface.rows() << " x " << Eigenface.cols() << endl;
         char filename[50];
         sprintf(filename, "eigenfaces/eigenface%u.pgm", i);
         saveMatrixAsPgm(filename, Eigenface); // Save Eigenface
     }
 
-    cout << "Calculate weights for all images" << endl;
-    W_all = project(U, images, mu);
-    cout << "W_all: " << W_all.rows() << " x " << W_all.cols() << endl;
-    MatrixXf face_all = reconstructFace(U, W_all, mu);
-    //cout << "face_all: " << face_all.rows() << " x " << face_all.cols() << endl;
-
     cout << "Done training" << endl;
 }
 
-// Based on: http://stackoverflow.com/a/12399290/2175837
-template<typename VectorType>
-vector<size_t> sortIndexes(const VectorType &v) {
-    // Initialize original index locations
-    vector<size_t> idx(v.size());
-    iota(idx.begin(), idx.end(), 0);
-
-    // Sort indexes based on comparing values in v
-    sort(idx.begin(), idx.end(),
-        [&v](size_t i1, size_t i2) { return v[i1] < v[i2]; });
-
-    return idx;
-}
-
 int main(void) {
-    MatrixXf images, U, W_all;
-    VectorXf mu;
-    trainEigenfaces(images, mu, U, W_all);
-    //cout << W_all.format(OctaveFmt) << endl;
+    MatrixXf images;
+    trainEigenfaces(images);
 
     MatrixXf target = readPgmAsMatrix("../orl_faces/s3/8.pgm"); // Load a random image from the database
 
     cout << "Reconstructing Faces" << endl;
-    VectorXf W = project(U, Map<VectorXf>(target.data(), target.size()), mu); // Flatten image and project onto Eigenfaces
-    VectorXf face = reconstructFace(U, W, mu);
+    VectorXf W = pca.project(Map<VectorXf>(target.data(), target.size())); // Flatten image and project onto Eigenfaces
+    VectorXf face = pca.reconstructFace(W);
     //cout << W.format(OctaveFmt) << endl;
 
     cout << "Calculate normalized Euclidean distance" << endl;
-    VectorXf dist = euclideanDist(W_all, W);
+    VectorXf dist = pca.euclideanDist(W);
     //cout << "dist: " << dist.rows() << " x " << dist.cols() << endl;
 
-    vector<size_t> idx = sortIndexes(dist);
+    vector<size_t> idx = pca.sortIndexes(dist);
     //for (auto i : idx) cout << "dist[" << i << "]: " << dist(i) << endl;
 
     mkdir("matches", 0755);
@@ -217,9 +134,9 @@ int main(void) {
             char filename[50];
             sprintf(filename, "../orl_faces/s%u/%u.pgm", i + 1, j + 1);
             target = readPgmAsMatrix(filename);
-            W = project(U, Map<VectorXf>(target.data(), target.size()), mu); // Flatten image and project onto Eigenfaces
-            dist = euclideanDist(W_all, W);
-            idx = sortIndexes(dist);
+            W = pca.project(Map<VectorXf>(target.data(), target.size())); // Flatten image and project onto Eigenfaces
+            dist = pca.euclideanDist(W);
+            idx = pca.sortIndexes(dist);
             //cout << "dist[" << idx[0] << "]: " << dist(idx[0]) << endl;
             if ((int)idx[0] != i*n_img_pr_person+j) {
                 cout << "Wrong match: " << i*n_img_pr_person+j << " should be: " << idx[0] << endl;
