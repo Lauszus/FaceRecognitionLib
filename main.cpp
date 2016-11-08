@@ -32,7 +32,7 @@ using namespace Eigen;
 // Images are from the AT&T Facedatabase: http://www.cl.cam.ac.uk/research/dtg/attarchive/facedatabase.html
 
 // See: http://eigen.tuxfamily.org/dox/structEigen_1_1IOFormat.html
-IOFormat OctaveFmt(StreamPrecision, 0, ", ", ";\n", "", "", "[", "]");
+static IOFormat OctaveFmt(StreamPrecision, 0, ", ", ";\n", "", "", "[", "]");
 
 static const uint8_t M = 112, N = 92;
 static const uint16_t n_pixels = M*N;

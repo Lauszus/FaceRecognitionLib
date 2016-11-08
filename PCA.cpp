@@ -25,6 +25,9 @@
 using namespace std;
 using namespace Eigen;
 
+// See: http://eigen.tuxfamily.org/dox/structEigen_1_1IOFormat.html
+static IOFormat OctaveFmt(StreamPrecision, 0, ", ", ";\n", "", "", "[", "]");
+
 void PCA::compute(MatrixXf &images, int16_t numComponents /*= -1*/) {
     n_pixels = images.rows();
     n_images = images.cols();
@@ -83,6 +86,12 @@ void PCA::compute(MatrixXf &images, int16_t numComponents /*= -1*/) {
 #ifndef NDEBUG
             cout << "Extracting " << K << " Eigenfaces. Containing " << cumulativeEnergyThreshold << " % of the energy" << endl;
 #endif // NDEBUG
+            if (K > n_images - 1) { // Make sure that K is never equal to n_images
+                K = n_images - 1; // K can never be larger than n_images - 1
+#ifndef NDEBUG
+                cout << "K was limited to: " << K << endl;
+#endif // NDEBUG
+            }
         }
 
         // MatrixXf D = S.block(0, 0, n_images, K); // Extract K largest values
