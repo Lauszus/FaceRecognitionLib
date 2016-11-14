@@ -29,7 +29,7 @@ convert \( match0.pgm match1.pgm match2.pgm +append \) \
 
 cd ../
 
-mv eigenfaces/eigenfaces.png .
-mv matches_eigenfaces/matches_eigenfaces.png .
-mv fisherfaces/fisherfaces.png .
-mv matches_fisherfaces/matches_fisherfaces.png .
+mv eigenfaces/eigenfaces.png img/eigenfaces.png
+mv matches_eigenfaces/matches_eigenfaces.png img/matches_eigenfaces.png
+mv fisherfaces/fisherfaces.png img/fisherfaces.png
+mv matches_fisherfaces/matches_fisherfaces.png img/matches_fisherfaces.png

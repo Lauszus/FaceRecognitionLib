@@ -38,10 +38,20 @@ using namespace Eigen;
 // See: http://eigen.tuxfamily.org/dox/structEigen_1_1IOFormat.html
 static IOFormat OctaveFmt(StreamPrecision, 0, ", ", ";\n", "", "", "[", "]");
 
-static const uint8_t M = 112, N = 92;
+#if 1 // AT&T Facedatabase
+static const char *facePath = "../orl_faces";
+static const uint8_t N = 92, M = 112;
 static const uint16_t n_pixels = M*N;
 static const uint8_t n_person = 40;
 static const uint8_t n_img_pr_person = 10;
+#else // Yale Face Database
+static const char *facePath = "../yalefaces";
+static const uint16_t N = 320, M = 243;
+static const uint32_t n_pixels = M*N;
+static const uint8_t n_person = 15;
+static const uint8_t n_img_pr_person = 11;
+#endif
+
 static const uint16_t n_images = n_img_pr_person*n_person;
 
 static MatrixXf readPgmAsMatrix(const char *filename) {
@@ -82,7 +92,7 @@ static void trainFaces(MatrixXf &images) {
     for (int i = 0; i < n_person; i++) {
         for (int j = 0; j < n_img_pr_person; j++) {
             char filename[50];
-            sprintf(filename, "../orl_faces/s%u/%u.pgm", i + 1, j + 1);
+            sprintf(filename, "%s/s%u/%u.pgm", facePath, i + 1, j + 1);
             MatrixXf img = readPgmAsMatrix(filename);
             const size_t index = i*n_img_pr_person + j;
             images.block<n_pixels, 1>(0, index) = Map<VectorXf>(img.data(), img.size()); // Flatten image
@@ -150,6 +160,7 @@ int main(void) {
     trainFaces(images);
 
     MatrixXf target = readPgmAsMatrix("../orl_faces/s3/8.pgm"); // Load a random image from the database
+    //MatrixXf target = readPgmAsMatrix("../yalefaces/s1/4.pgm"); // Load image with light coming from the left side
 
     cout << "Calculating matches using Eigenfaces" << endl;
     calculateMatches(target, images, eigenfaces, "matches_eigenfaces"); // Calculate matches based on Eigenfaces
@@ -163,7 +174,7 @@ int main(void) {
     for (int i = 0; i < n_person; i++) {
         for (int j = 0; j < n_img_pr_person; j++) {
             char filename[50];
-            sprintf(filename, "../orl_faces/s%u/%u.pgm", i + 1, j + 1);
+            sprintf(filename, "%s/s%u/%u.pgm", facePath, i + 1, j + 1);
             target = readPgmAsMatrix(filename);
             VectorXf W = eigenfaces.project(Map<VectorXf>(target.data(), target.size())); // Flatten image and project onto Eigenfaces
             VectorXf dist = eigenfaces.euclideanDist(W);
