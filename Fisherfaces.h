@@ -15,24 +15,23 @@
  e-mail   :  lauszus@gmail.com
 */
 
-#ifndef __eigenfaces_h__
-#define __eigenfaces_h__
+#ifndef __fisherfaces_h__
+#define __fisherfaces_h__
 
 #include <Eigen/Dense> // http://eigen.tuxfamily.org
 
 #include "Facebase.h"
 #include "PCA.h"
+#include "LDA.h"
 
 using namespace Eigen;
 
-class Eigenfaces : public Facebase, public PCA {
+class Fisherfaces : public Facebase, public PCA, public LDA {
 public:
-    void train(const MatrixXf &images);
+    void train(const MatrixXf &images, const VectorXi &classes);
 
     // Facebase implementations
-    MatrixXf project(const MatrixXf &X) {
-        return PCA::project(X); // Simply call PCA implementation
-    };
+    MatrixXf project(const MatrixXf &X);
     MatrixXf reconstructFace(const MatrixXf &W);
 };
 

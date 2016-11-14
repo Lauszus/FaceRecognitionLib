@@ -28,11 +28,15 @@ using namespace Eigen;
 // See: http://eigen.tuxfamily.org/dox/structEigen_1_1IOFormat.html
 static IOFormat OctaveFmt(StreamPrecision, 0, ", ", ";\n", "", "", "[", "]");
 
-void PCA::compute(MatrixXf &images, int16_t numComponents /*= -1*/) {
-    n_pixels = images.rows();
-    n_images = images.cols();
+int32_t PCA::compute(const MatrixXf &images, int32_t numComponents /*= -1*/) {
+#ifndef NDEBUG
+    cout << "Computing PCA" << endl;
+#endif // NDEBUG
 
-    K = numComponents;
+    const size_t n_pixels = images.rows();
+    const size_t n_images = images.cols();
+
+    int32_t K = numComponents;
 
     mu = images.rowwise().mean(); // Calculate the mean along each row
 
@@ -86,13 +90,17 @@ void PCA::compute(MatrixXf &images, int16_t numComponents /*= -1*/) {
 #ifndef NDEBUG
             cout << "Extracting " << K << " Eigenfaces. Containing " << cumulativeEnergyThreshold << " % of the energy" << endl;
 #endif // NDEBUG
-            if (K > n_images - 1) { // Make sure that K is never equal to n_images
+            if (K > (int32_t)(n_images - 1)) { // Make sure that K is never equal to n_images
                 K = n_images - 1; // K can never be larger than n_images - 1
 #ifndef NDEBUG
                 cout << "K was limited to: " << K << endl;
 #endif // NDEBUG
             }
         }
+#ifndef NDEBUG
+        else
+            cout << "Using " << K << " Eigenfaces" << endl;
+#endif // NDEBUG
 
         // MatrixXf D = S.block(0, 0, n_images, K); // Extract K largest values
         // D = D*D / n_pixels; // Calculate eigenvalues
@@ -107,12 +115,10 @@ void PCA::compute(MatrixXf &images, int16_t numComponents /*= -1*/) {
 #ifndef NDEBUG
     cout << "U: " << U.rows() << " x " << U.cols() << " norm: " << U.norm() << endl;
 #endif // NDEBUG
+
+    return K;
 }
 
 MatrixXf PCA::project(const MatrixXf &X) {
-    return U.transpose()*(X.colwise() - mu); // Project X onto Eigenface subspace
-}
-
-MatrixXf PCA::reconstructFace(const MatrixXf &W) {
-    return (U*W).colwise() + mu; // Reconstruct face
+    return U.transpose()*(X.colwise() - mu); // Project X onto subspace
 }

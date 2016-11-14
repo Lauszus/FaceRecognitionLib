@@ -1,4 +1,6 @@
 *.o
 eigenfaces/
-matches/
+fisherfaces/
+matches_eigenfaces/
+matches_fisherfaces/
 main

@@ -15,25 +15,25 @@
  e-mail   :  lauszus@gmail.com
 */
 
-#ifndef __eigenfaces_h__
-#define __eigenfaces_h__
+#ifndef __tools_h__
+#define __tools_h__
 
-#include <Eigen/Dense> // http://eigen.tuxfamily.org
+#include <numeric>
+#include <vector>
 
-#include "Facebase.h"
-#include "PCA.h"
+using namespace std;
 
-using namespace Eigen;
+template<typename VectorType>
+vector<size_t> sortIndexes(const VectorType &v) {
+    // Based on: http://stackoverflow.com/a/12399290/2175837
+    // Initialize original index locations
+    vector<size_t> idx(v.size());
+    iota(idx.begin(), idx.end(), 0);
 
-class Eigenfaces : public Facebase, public PCA {
-public:
-    void train(const MatrixXf &images);
+    // Sort indexes based on comparing values in v
+    sort(idx.begin(), idx.end(), [&v](size_t i1, size_t i2) { return v[i1] < v[i2]; });
 
-    // Facebase implementations
-    MatrixXf project(const MatrixXf &X) {
-        return PCA::project(X); // Simply call PCA implementation
-    };
-    MatrixXf reconstructFace(const MatrixXf &W);
+    return idx;
 };
 
 #endif

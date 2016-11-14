@@ -1,8 +1,8 @@
 CC = gcc
 CXX = g++
 
-CFLAGS = -Wall -O3 -std=gnu11 -Wfatal-errors -Wunused-parameter -Wextra
-CXXFLAGS = -Wall -O3 -std=gnu++11 -Wfatal-errors -Wunused-parameter -Wextra
+CFLAGS = -Wall -O3 -std=gnu11 -Wfatal-errors -Wunused-parameter -Wextra -openmp
+CXXFLAGS = -Wall -O3 -std=gnu++11 -Wfatal-errors -Wunused-parameter -Wextra -openmp
 
 # Include Eigen library
 CXXFLAGS += `pkg-config --cflags eigen3`

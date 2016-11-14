@@ -15,25 +15,30 @@
  e-mail   :  lauszus@gmail.com
 */
 
-#ifndef __eigenfaces_h__
-#define __eigenfaces_h__
+#ifndef __facebase_h__
+#define __facebase_h__
 
 #include <Eigen/Dense> // http://eigen.tuxfamily.org
 
-#include "Facebase.h"
 #include "PCA.h"
 
 using namespace Eigen;
 
-class Eigenfaces : public Facebase, public PCA {
+class Facebase {
 public:
-    void train(const MatrixXf &images);
+    virtual MatrixXf project(const MatrixXf &X) = 0;
+    virtual MatrixXf reconstructFace(const MatrixXf &W) = 0;
 
-    // Facebase implementations
-    MatrixXf project(const MatrixXf &X) {
-        return PCA::project(X); // Simply call PCA implementation
+    VectorXf euclideanDist(const VectorXf &W) {
+        return ((W_all.colwise() - W)/n_pixels).colwise().norm()/sqrt(numComponents); // Measure euclidean distance between weights
     };
-    MatrixXf reconstructFace(const MatrixXf &W);
+
+    MatrixXf V; // Eigenvector
+    int32_t numComponents; // Number of components
+
+protected:
+    MatrixXf W_all, face_all; // Total weights and faces
+    size_t n_pixels;
 };
 
 #endif

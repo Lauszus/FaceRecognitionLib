@@ -15,36 +15,26 @@
  e-mail   :  lauszus@gmail.com
 */
 
-#ifndef __pca_h__
-#define __pca_h__
+#ifndef __lda_h__
+#define __lda_h__
 
 #include <Eigen/Dense> // http://eigen.tuxfamily.org
 
 using namespace Eigen;
 
-class PCA {
+class LDA {
 public:
     /**
-     * Computes the Eigenvectors of the images using PCA.
-     * @param  images        Each images is represented as a column vector.
-     * @param  numComponents Number of singular values used. If this is set to -1, a cumulative energy threshold of 90 % is used.
+     * Computes the Eigenvectors of X using LDA.
+     * @param  X             Data matrix.
+     * @param  classes       Class vector. Must start at 1 and increment by one.
+     * @param  numComponents Number of components used for the analysis.
      * @return               Returns the number of components used.
      */
-    int32_t compute(const MatrixXf &images, int32_t numComponents = -1);
-
-    /**
-     * Project X onto PCA subspace.
-     * @param  X Data matrix.
-     * @return   Returns the projected matrix.
-     */
-    MatrixXf project(const MatrixXf &X);
+    int32_t compute(const MatrixXf &X, const VectorXi &classes, int32_t numComponents);
 
 protected:
     MatrixXf U; // Eigenvectors
-    VectorXf mu; // Mean along each row
-
-private:
-    const float cumulativeEnergyThreshold = .9f; // Determine the number of principal components required to model 90 % of data variance
 };
 
 #endif

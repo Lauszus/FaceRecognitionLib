@@ -19,21 +19,24 @@
 
 #include <Eigen/Dense> // http://eigen.tuxfamily.org
 
-#include "Eigenfaces.h"
+#include "Fisherfaces.h"
 
 using namespace std;
 using namespace Eigen;
 
-void Eigenfaces::train(const MatrixXf &images) {
+void Fisherfaces::train(const MatrixXf &images, const VectorXi &classes) {
     this->n_pixels = images.rows();
+    size_t n_images = classes.size(); // Get number of images
+    int c = classes.maxCoeff(); // Calculate the number of classes, assuming that labels start at 1 and are incremented by 1
 
-    // Copy values from PCA
-    this->numComponents = PCA::compute(images);
-    this->V = PCA::U; // This contains all Eigenfaces
+    PCA::compute(images, n_images - c);
+    MatrixXf W_pca = PCA::project(images); // Project images onto subspace
+    this->numComponents = LDA::compute(W_pca, classes, c - 1); // Copy number of components from LDA
 
 #ifndef NDEBUG
     cout << "Calculate weights for all images" << endl;
 #endif
+    this->V = PCA::U*LDA::U; // Calculate Fisherfaces
     this->W_all = project(images); // Calculate weights
 #ifndef NDEBUG
     cout << "W_all: " << W_all.rows() << " x " << W_all.cols() << endl;
@@ -42,6 +45,10 @@ void Eigenfaces::train(const MatrixXf &images) {
     //cout << "face_all: " << face_all.rows() << " x " << face_all.cols() << endl;
 }
 
-MatrixXf Eigenfaces::reconstructFace(const MatrixXf &W) {
-    return (V*W).colwise() + PCA::mu; // Reconstruct face
+MatrixXf Fisherfaces::project(const MatrixXf &X) {
+    return V.transpose()*X; // Project X onto Fisherface subspace
+}
+
+MatrixXf Fisherfaces::reconstructFace(const MatrixXf &W) {
+    return V*W; // Reconstruct face
 }
