@@ -38,7 +38,10 @@ static IOFormat OctaveFmt(StreamPrecision, 0, ", ", ";\n", "", "", "[", "]");
 int32_t LDA::compute(const MatrixXf &X, const VectorXi &classes, int32_t numComponents) {
 #ifndef NDEBUG
     cout << "Computing LDA" << endl;
+    cout << "X: " << X.rows() << " x " << X.cols() << endl;
+    cout << "classes: " << classes.rows() << " x " << classes.cols() << endl;
 #endif // NDEBUG
+
     const size_t N = X.cols();
     assert((size_t)classes.size() == N); // Make sure that there is a class for each column
     const size_t dim = X.rows();
@@ -59,21 +62,21 @@ int32_t LDA::compute(const MatrixXf &X, const VectorXi &classes, int32_t numComp
 
     vector<size_t> idx = sortIndexes(classes); // Get indices corresponding to the different classes sorted by the class number
     //for (auto i : idx) cout << "classes(" << i << "): " << classes(i) << endl;
+    auto iterator = idx.begin(); // Get iterator
 
     MatrixXf Sw = MatrixXf::Zero(dim, dim);
     MatrixXf Sb = MatrixXf::Zero(dim, dim);
     // cout << X.format(OctaveFmt) << endl;
     for (int i = 0; i < c; i++) {
-        int class_count = std::count(classes.data(), classes.data() + classes.size(), i + 1); // Get the number of time that specific class occurs
+        int class_count = count(classes.data(), classes.data() + classes.size(), i + 1); // Get the number of times that specific class occurs
         // cout << "class_count: " << class_count << endl;
 
         MatrixXf X_class(dim, class_count);
-        size_t index = 0;
-        for (auto j : idx) { // TODO: Optimize this, as the indices are already sorted
-            //cout << "classes(" << j << "): " << classes(j) << endl;
-            if (classes(j) == i + 1)
-                X_class.block(0, index++, dim, 1) = X.block(0, j, dim, 1); // Copy data from original image, each pixel at a time based on the indices
+        for (int j = 0; j < class_count; j++) {
+            // cout << "classes(" << iterator[j] << "): " << classes(iterator[j]) << endl;
+            X_class.block(0, j, dim, 1) = X.block(0, iterator[j], dim, 1); // Copy data from original image, each image at a time based on the sorted indices
         }
+        advance(iterator, class_count); // Advance iterator by the class count
         // cout << X_class.format(OctaveFmt) << endl;
 
         VectorXf mu_class = X_class.rowwise().mean(); // Calculate the mean along each row
