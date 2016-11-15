@@ -17,6 +17,7 @@
 
 #include <iostream>
 #include <sys/stat.h>
+#include <algorithm>
 
 #include <Eigen/Dense> // http://eigen.tuxfamily.org
 
@@ -144,7 +145,7 @@ void calculateMatches(MatrixXf &target, const MatrixXf &images, Facebase &faceba
 
     char filename[50];
     mkdir(dirName, 0755);
-    for (int i = 0; i < 9; i++) { // Save first nine matches
+    for (int i = 0; i < min(dist.size(), 9L); i++) { // Save first nine matches
         cout << "dist[" << idx[i] << "]: " << dist(idx[i]) << endl;
         sprintf(filename, "%s/match%u.pgm", dirName, i);
         MatrixXf img = images.block<n_pixels, 1>(0, idx[i]);

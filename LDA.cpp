@@ -58,6 +58,9 @@ int32_t LDA::compute(const MatrixXf &X, const VectorXi &classes, int32_t numComp
     cout << "numComponents: " << numComponents << endl;
 #endif // NDEBUG
 
+    if (dim == 0)
+        return 0; // Make sure dimension is valid
+
     VectorXf mu = X.rowwise().mean(); // Calculate the mean along each row
 
     vector<size_t> idx = sortIndexes(classes); // Get indices corresponding to the different classes sorted by the class number
