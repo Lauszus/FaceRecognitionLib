@@ -30,14 +30,14 @@ public:
      * @param  numComponents Number of singular values used. If this is set to -1, a cumulative energy threshold of 90 % is used.
      * @return               Returns the number of components used.
      */
-    int32_t compute(const MatrixXf &images, int32_t numComponents = -1);
+    int32_t compute(const MatrixXi &images, int32_t numComponents = -1);
 
     /**
      * Project X onto PCA subspace.
      * @param  X Data matrix.
      * @return   Returns the projected matrix.
      */
-    MatrixXf project(const MatrixXf &X);
+    MatrixXf project(const MatrixXi &X);
 
 protected:
     MatrixXf U; // Eigenvectors

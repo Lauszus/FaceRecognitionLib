@@ -28,10 +28,10 @@ using namespace Eigen;
 
 class Fisherfaces : public Facebase, public PCA, public LDA {
 public:
-    void train(const MatrixXf &images, const VectorXi &classes);
+    void train(const MatrixXi &images, const VectorXi &classes);
 
     // Facebase implementations
-    MatrixXf project(const MatrixXf &X);
+    MatrixXf project(const MatrixXi &X);
     MatrixXf reconstructFace(const MatrixXf &W);
 };
 

@@ -26,7 +26,7 @@ using namespace Eigen;
 
 class Facebase {
 public:
-    virtual MatrixXf project(const MatrixXf &X) = 0;
+    virtual MatrixXf project(const MatrixXi &X) = 0;
     virtual MatrixXf reconstructFace(const MatrixXf &W) = 0;
 
     VectorXf euclideanDist(const VectorXf &W) {

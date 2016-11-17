@@ -27,10 +27,10 @@ using namespace Eigen;
 
 class Eigenfaces : public Facebase, public PCA {
 public:
-    void train(const MatrixXf &images);
+    void train(const MatrixXi &images);
 
     // Facebase implementations
-    MatrixXf project(const MatrixXf &X) {
+    MatrixXf project(const MatrixXi &X) {
         return PCA::project(X); // Simply call PCA implementation
     };
     MatrixXf reconstructFace(const MatrixXf &W);

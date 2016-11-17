@@ -24,7 +24,7 @@
 using namespace std;
 using namespace Eigen;
 
-void Eigenfaces::train(const MatrixXf &images) {
+void Eigenfaces::train(const MatrixXi &images) {
     this->n_pixels = images.rows();
 
     // Copy values from PCA

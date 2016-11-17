@@ -28,7 +28,7 @@ using namespace Eigen;
 // See: http://eigen.tuxfamily.org/dox/structEigen_1_1IOFormat.html
 static IOFormat OctaveFmt(StreamPrecision, 0, ", ", ";\n", "", "", "[", "]");
 
-int32_t PCA::compute(const MatrixXf &images, int32_t numComponents /*= -1*/) {
+int32_t PCA::compute(const MatrixXi &images, int32_t numComponents /*= -1*/) {
 #ifndef NDEBUG
     cout << "Computing PCA" << endl;
 #endif // NDEBUG
@@ -38,9 +38,9 @@ int32_t PCA::compute(const MatrixXf &images, int32_t numComponents /*= -1*/) {
 
     int32_t K = numComponents;
 
-    mu = images.rowwise().mean(); // Calculate the mean along each row
+    mu = images.cast<float>().rowwise().mean(); // Calculate the mean along each row
 
-    MatrixXf images_mu = images.colwise() - mu; // Subtract means from all columns before doing SVD
+    MatrixXf images_mu = images.cast<float>().colwise() - mu; // Subtract means from all columns before doing SVD
 
 #ifndef NDEBUG
     cout << "Calculating the covariance matrix" << endl;
@@ -119,6 +119,6 @@ int32_t PCA::compute(const MatrixXf &images, int32_t numComponents /*= -1*/) {
     return K;
 }
 
-MatrixXf PCA::project(const MatrixXf &X) {
-    return U.transpose()*(X.colwise() - mu); // Project X onto subspace
+MatrixXf PCA::project(const MatrixXi &X) {
+    return U.transpose()*(X.cast<float>().colwise() - mu); // Project X onto subspace
 }

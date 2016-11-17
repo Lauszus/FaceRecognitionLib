@@ -24,7 +24,7 @@
 using namespace std;
 using namespace Eigen;
 
-void Fisherfaces::train(const MatrixXf &images, const VectorXi &classes) {
+void Fisherfaces::train(const MatrixXi &images, const VectorXi &classes) {
     this->n_pixels = images.rows();
     size_t n_images = classes.size(); // Get number of images
     int c = classes.maxCoeff(); // Calculate the number of classes, assuming that labels start at 1 and are incremented by 1
@@ -45,8 +45,8 @@ void Fisherfaces::train(const MatrixXf &images, const VectorXi &classes) {
     //cout << "face_all: " << face_all.rows() << " x " << face_all.cols() << endl;
 }
 
-MatrixXf Fisherfaces::project(const MatrixXf &X) {
-    return V.transpose()*X; // Project X onto Fisherface subspace
+MatrixXf Fisherfaces::project(const MatrixXi &X) {
+    return V.transpose()*X.cast<float>(); // Project X onto Fisherface subspace
 }
 
 MatrixXf Fisherfaces::reconstructFace(const MatrixXf &W) {

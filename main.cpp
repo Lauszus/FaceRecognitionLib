@@ -55,10 +55,10 @@ static const uint8_t n_img_pr_person = 11;
 
 static const uint16_t n_images = n_img_pr_person*n_person;
 
-static MatrixXf readPgmAsMatrix(const char *filename) {
+static MatrixXi readPgmAsMatrix(const char *filename) {
     PGMImage imgRaw;
     getPGMfile(filename, &imgRaw);
-    MatrixXf img(imgRaw.height, imgRaw.width);
+    MatrixXi img(imgRaw.height, imgRaw.width);
     for (int y = 0; y < imgRaw.height; y++) {
         for (int x = 0; x < imgRaw.width; x++) {
             img(y, x) = imgRaw.data[imgRaw.height - y - 1][x].red; // Map data to Eigen Matrix
@@ -83,9 +83,9 @@ static void saveMatrixAsPgm(const char *filename, const MatrixXf &A) {
     savePGMfile(filename, &img);
 }
 
-static void trainFaces(MatrixXf &images) {
+static void trainFaces(MatrixXi &images) {
     cout << "Loading images" << endl;
-    images = MatrixXf(n_pixels, n_images); // Pre-allocate storage for images
+    images = MatrixXi(n_pixels, n_images); // Pre-allocate storage for images
     VectorXi classes = VectorXi(n_images); // Create class vector
     cout << "images: " << images.rows() << " x " << images.cols() << endl << endl;
 
@@ -94,9 +94,9 @@ static void trainFaces(MatrixXf &images) {
         for (int j = 0; j < n_img_pr_person; j++) {
             char filename[50];
             sprintf(filename, "%s/s%u/%u.pgm", facePath, i + 1, j + 1);
-            MatrixXf img = readPgmAsMatrix(filename);
+            MatrixXi img = readPgmAsMatrix(filename);
             const size_t index = i*n_img_pr_person + j;
-            images.block<n_pixels, 1>(0, index) = Map<VectorXf>(img.data(), img.size()); // Flatten image
+            images.block<n_pixels, 1>(0, index) = Map<VectorXi>(img.data(), img.size()); // Flatten image
             classes(index) = i + 1; // Generate class number for each person
         }
     }
@@ -106,11 +106,11 @@ static void trainFaces(MatrixXf &images) {
 
     mkdir("eigenfaces", 0755);
     for (int i = 0; i < eigenfaces.numComponents; i++) { // Save Eigenfaces as PGM images
-        Map<MatrixXf> Eigenface(eigenfaces.V.block<n_pixels, 1>(0, i).data(), M, N); // Extract Eigenface
-        //cout << "Eigenface: " << Eigenface.rows() << " x " << Eigenface.cols() << endl;
+        Map<MatrixXf> eigenface(eigenfaces.V.block<n_pixels, 1>(0, i).data(), M, N); // Extract Eigenface
+        //cout << "Eigenface: " << eigenface.rows() << " x " << eigenface.cols() << endl;
         char filename[50];
         sprintf(filename, "eigenfaces/eigenface%u.pgm", i);
-        saveMatrixAsPgm(filename, Eigenface); // Save Eigenface
+        saveMatrixAsPgm(filename, eigenface); // Save Eigenface
     }
 
     cout << "Done training Eigenfaces" << endl << endl;
@@ -120,19 +120,19 @@ static void trainFaces(MatrixXf &images) {
 
     mkdir("fisherfaces", 0755);
     for (int i = 0; i < fisherfaces.numComponents; i++) { // Save Fisherfaces as PGM images
-        Map<MatrixXf> Fisherface(fisherfaces.V.block<n_pixels, 1>(0, i).data(), M, N); // Extract Fisherface
-        //cout << "Fisherface: " << Fisherface.rows() << " x " << Fisherface.cols() << endl;
+        Map<MatrixXf> fisherface(fisherfaces.V.block<n_pixels, 1>(0, i).data(), M, N); // Extract Fisherface
+        //cout << "Fisherface: " << fisherface.rows() << " x " << fisherface.cols() << endl;
         char filename[50];
         sprintf(filename, "fisherfaces/fisherface%u.pgm", i);
-        saveMatrixAsPgm(filename, Fisherface); // Save Fisherface
+        saveMatrixAsPgm(filename, fisherface); // Save Fisherface
     }
 
     cout << "Done training Fisherfaces" << endl << endl;
 }
 
-void calculateMatches(MatrixXf &target, const MatrixXf &images, Facebase &facebase, const char *dirName) {
+void calculateMatches(MatrixXi &target, const MatrixXi &images, Facebase &facebase, const char *dirName) {
     cout << "Reconstructing Faces" << endl;
-    VectorXf W = facebase.project(Map<VectorXf>(target.data(), target.size())); // Flatten image and project onto subspace
+    VectorXf W = facebase.project(Map<VectorXi>(target.data(), target.size())); // Flatten image and project onto subspace
     VectorXf face = facebase.reconstructFace(W);
     //cout << W.format(OctaveFmt) << endl;
 
@@ -148,20 +148,20 @@ void calculateMatches(MatrixXf &target, const MatrixXf &images, Facebase &faceba
     for (int i = 0; i < min(dist.size(), 9L); i++) { // Save first nine matches
         cout << "dist[" << idx[i] << "]: " << dist(idx[i]) << endl;
         sprintf(filename, "%s/match%u.pgm", dirName, i);
-        MatrixXf img = images.block<n_pixels, 1>(0, idx[i]);
+        MatrixXi img = images.block<n_pixels, 1>(0, idx[i]);
         //cout << "img: " << img.rows() << " x " << img.cols() << endl;
-        saveMatrixAsPgm(filename, Map<MatrixXf>(img.data(), M, N)); // Save matched image
+        saveMatrixAsPgm(filename, Map<MatrixXi>(img.data(), M, N).cast<float>()); // Save matched image
     }
     sprintf(filename, "%s/face.pgm", dirName);
     saveMatrixAsPgm(filename, Map<MatrixXf>(face.data(), M, N)); // Save face image
 }
 
 int main(void) {
-    MatrixXf images;
+    MatrixXi images;
     trainFaces(images);
 
-    MatrixXf target = readPgmAsMatrix("../orl_faces/s3/8.pgm"); // Load a random image from the database
-    //MatrixXf target = readPgmAsMatrix("../yalefaces/s1/4.pgm"); // Load image with light coming from the left side
+    MatrixXi target = readPgmAsMatrix("../orl_faces/s3/8.pgm"); // Load a random image from the database
+    //MatrixXi target = readPgmAsMatrix("../yalefaces/s1/4.pgm"); // Load image with light coming from the left side
 
     cout << "Calculating matches using Eigenfaces" << endl;
     calculateMatches(target, images, eigenfaces, "matches_eigenfaces"); // Calculate matches based on Eigenfaces
@@ -177,7 +177,7 @@ int main(void) {
             char filename[50];
             sprintf(filename, "%s/s%u/%u.pgm", facePath, i + 1, j + 1);
             target = readPgmAsMatrix(filename);
-            VectorXf W = eigenfaces.project(Map<VectorXf>(target.data(), target.size())); // Flatten image and project onto Eigenfaces
+            VectorXf W = eigenfaces.project(Map<VectorXi>(target.data(), target.size())); // Flatten image and project onto Eigenfaces
             VectorXf dist = eigenfaces.euclideanDist(W);
             vector<size_t> idx = sortIndexes(dist);
             //cout << "dist[" << idx[0] << "]: " << dist(idx[0]) << endl;
