@@ -68,7 +68,8 @@ int32_t PCA::compute(const MatrixXi &images, int32_t numComponents /*= -1*/) {
 
         cout << "Calculating the SVD" << endl;
 #endif // NDEBUG
-        JacobiSVD<MatrixXf> svd(cov_matrix, ComputeThinV); // Calculate singular values
+        //JacobiSVD<MatrixXf> svd(cov_matrix, ComputeThinV); // Calculate singular values
+        BDCSVD<MatrixXf> svd(cov_matrix, ComputeThinV); // Calculate singular values
 
         if (K == -1) { // Calculate K based on cumulative energy instead of using hardcoded value - see: https://en.wikipedia.org/wiki/Principal_component_analysis#Compute_the_cumulative_energy_content_for_each_eigenvector
             VectorXf S = svd.singularValues(); // Get singular values
