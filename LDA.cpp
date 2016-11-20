@@ -24,7 +24,6 @@
 
 #include <Eigen/Dense> // http://eigen.tuxfamily.org
 #include <Eigen/Eigenvalues>
-#include <RedSVD/RedSVD-h> // https://github.com/ntessore/redsvd-h
 
 #include "LDA.h"
 #include "Tools.h"
@@ -91,11 +90,14 @@ int32_t LDA::compute(const MatrixXf &X, const VectorXi &classes, int32_t numComp
     }
 
     EigenSolver<MatrixXf> es(Sw.inverse()*Sb); // Solves eigenvalues and eigenvectors of the matrix
-    // cout << es.eigenvalues().head(numComponents).transpose().format(OctaveFmt) << endl;
-    // for (size_t i = 0; i < numComponents; i++)
-    //     cout << es.eigenvectors().col(i).format(OctaveFmt) << endl;
-    U = es.eigenvectors().real().block(0, 0, dim, numComponents); // Extract eigenvectors
-    // cout << U.block(0, 0, dim, 10).format(OctaveFmt) << endl;
+    VectorXf D = es.eigenvalues().real();
+    idx = sortIndexes(D); // Get indices sorted by increasing Eigenvalues
+    // for (auto i : idx) cout << "D(" << i << "): " << D(i) << endl;
+    MatrixXf V = es.eigenvectors().real();
+    U = MatrixXf(dim, numComponents); // Allocate memory
+    for (int32_t i = 0; i < numComponents; i++) // Sort Eigenvectors according to Eigenvalues in decreasing order
+        U.col(i) = V.col(idx[(idx.size() - 1) - i]); // Reverse indices, as we want them to be sorted by decreasing Eigenvalues
+    // cout << U.block(0, 0, 10, 10).format(OctaveFmt) << endl;
 
     return numComponents;
 }
