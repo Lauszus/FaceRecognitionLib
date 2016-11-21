@@ -32,13 +32,6 @@ public:
      */
     int32_t compute(const MatrixXi &images, int32_t numComponents = -1);
 
-    /**
-     * Project X onto PCA subspace.
-     * @param  X Data matrix.
-     * @return   Returns the projected matrix.
-     */
-    MatrixXf project(const MatrixXi &X);
-
 protected:
     MatrixXf U; // Eigenvectors
     VectorXf mu; // Mean along each row

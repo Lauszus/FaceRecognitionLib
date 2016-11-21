@@ -131,12 +131,18 @@ static void trainFaces(MatrixXi &images) {
 }
 
 void calculateMatches(MatrixXi &target, const MatrixXi &images, Facebase &facebase, const char *dirName) {
+    cout << "target: " << target.rows() << " x " << target.cols() << endl;
+
     cout << "Reconstructing Faces" << endl;
-    VectorXf W = facebase.project(Map<VectorXi>(target.data(), target.size())); // Flatten image and project onto subspace
-    VectorXf face = facebase.reconstructFace(W);
+    VectorXi target_flat = Map<VectorXi>(target.data(), target.size()); // Flatten image
+    VectorXf W = facebase.project(target_flat); // Project onto subspace
     //cout << W.format(OctaveFmt) << endl;
+    VectorXf face = facebase.reconstructFace(W);
 
     cout << "Calculate normalized Euclidean distance" << endl;
+    float dist_face = facebase.euclideanDistFace(target_flat, face);
+    cout << "Face distance: " << dist_face << endl;
+
     VectorXf dist = facebase.euclideanDist(W);
     //cout << "dist: " << dist.rows() << " x " << dist.cols() << endl;
 
@@ -161,6 +167,7 @@ int main(void) {
     trainFaces(images);
 
     MatrixXi target = readPgmAsMatrix("../orl_faces/s3/8.pgm"); // Load a random image from the database
+    //MatrixXi target = readPgmAsMatrix("img/bart.pgm"); // Used to test face distance
     //MatrixXi target = readPgmAsMatrix("../yalefaces/s1/4.pgm"); // Load image with light coming from the left side
 
     cout << "Calculating matches using Eigenfaces" << endl;

@@ -24,20 +24,42 @@
 
 using namespace Eigen;
 
-class Facebase {
+class Facebase : public PCA {
 public:
-    virtual MatrixXf project(const MatrixXi &X) = 0;
-    virtual MatrixXf reconstructFace(const MatrixXf &W) = 0;
+    /**
+     * Project X onto subspace.
+     * @param  X Input image.
+     * @return   Returns the weight matrix.
+     */
+    MatrixXf project(const MatrixXi &X);
 
-    VectorXf euclideanDist(const VectorXf &W) {
-        return ((W_all.colwise() - W)/n_pixels).colwise().norm()/sqrt(numComponents); // Measure euclidean distance between weights
-    };
+    /**
+     * Calculate distance between weight and the weights for the current method used.
+     * @param  W Weights calculated by projecting images onto subspace.
+     * @return   Return a vector containing all distances.
+     */
+    VectorXf euclideanDist(const VectorXf &W);
+
+    /**
+     * Reconstruct a face from a weight.
+     * @param  W Weight calculated by projecting image onto subspace.
+     * @return   Returns the face vector.
+     */
+    VectorXf reconstructFace(const VectorXf &W);
+
+    /**
+     * Calculate the distance to the face subspace.
+     * @param  X    Input image.
+     * @param  face Face vector.
+     * @return      Returns the distance to the face subspace.
+     */
+    float euclideanDistFace(const VectorXi &X, const VectorXf &face);
 
     MatrixXf V; // Eigenvector
     int32_t numComponents; // Number of components
 
 protected:
-    MatrixXf W_all, face_all; // Total weights and faces
+    MatrixXf W_all; // Total weights
     size_t n_pixels;
 };
 

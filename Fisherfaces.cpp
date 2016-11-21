@@ -27,10 +27,12 @@ using namespace Eigen;
 void Fisherfaces::train(const MatrixXi &images, const VectorXi &classes) {
     this->n_pixels = images.rows();
     size_t n_images = classes.size(); // Get number of images
-    int c = classes.maxCoeff(); // Calculate the number of classes, assuming that labels start at 1 and are incremented by 1
+    assert(classes.minCoeff() == 1); // Class labels should start at 1 and increment by 1
+    int c = classes.maxCoeff(); // Calculate the number of classes
 
     PCA::compute(images, n_images - c);
-    MatrixXf W_pca = PCA::project(images); // Project images onto subspace
+    this->V = PCA::U; // Store PCA eigenvector temporarily, as it used for the projection
+    MatrixXf W_pca = project(images); // Project images onto subspace
     this->numComponents = LDA::compute(W_pca, classes, c - 1); // Copy number of components from LDA
 
 #ifndef NDEBUG
@@ -41,14 +43,4 @@ void Fisherfaces::train(const MatrixXi &images, const VectorXi &classes) {
 #ifndef NDEBUG
     cout << "W_all: " << W_all.rows() << " x " << W_all.cols() << endl;
 #endif
-    this->face_all = reconstructFace(W_all);
-    //cout << "face_all: " << face_all.rows() << " x " << face_all.cols() << endl;
-}
-
-MatrixXf Fisherfaces::project(const MatrixXi &X) {
-    return V.transpose()*X.cast<float>(); // Project X onto Fisherface subspace
-}
-
-MatrixXf Fisherfaces::reconstructFace(const MatrixXf &W) {
-    return V*W; // Reconstruct face
 }

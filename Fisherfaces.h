@@ -26,13 +26,14 @@
 
 using namespace Eigen;
 
-class Fisherfaces : public Facebase, public PCA, public LDA {
+class Fisherfaces : public Facebase, public LDA {
 public:
+    /**
+     * Train Fisherfaces.
+     * @param images  Each images represented as a column vector.
+     * @param classes Class labels should start at 1 and increment by 1.
+     */
     void train(const MatrixXi &images, const VectorXi &classes);
-
-    // Facebase implementations
-    MatrixXf project(const MatrixXi &X);
-    MatrixXf reconstructFace(const MatrixXf &W);
 };
 
 #endif

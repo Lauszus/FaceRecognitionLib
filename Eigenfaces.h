@@ -25,15 +25,13 @@
 
 using namespace Eigen;
 
-class Eigenfaces : public Facebase, public PCA {
+class Eigenfaces : public Facebase {
 public:
+    /**
+     * Train Eigenfaces.
+     * @param images Each images represented as a column vector.
+     */
     void train(const MatrixXi &images);
-
-    // Facebase implementations
-    MatrixXf project(const MatrixXi &X) {
-        return PCA::project(X); // Simply call PCA implementation
-    };
-    MatrixXf reconstructFace(const MatrixXf &W);
 };
 
 #endif

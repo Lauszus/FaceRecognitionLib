@@ -119,7 +119,3 @@ int32_t PCA::compute(const MatrixXi &images, int32_t numComponents /*= -1*/) {
 
     return K;
 }
-
-MatrixXf PCA::project(const MatrixXi &X) {
-    return U.transpose()*(X.cast<float>().colwise() - mu); // Project X onto subspace
-}

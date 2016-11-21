@@ -75,7 +75,6 @@ end
 
 disp('Calculate weights for all images')
 W_all = U'*images_mu;
-face_all = bsxfun(@plus, U*W_all, mu); % Add means back again
 
 disp('Done training')
 
@@ -83,20 +82,21 @@ disp('Done training')
 clc; close all;
 
 target = imread('../orl_faces/s3/8.pgm');
+%target = imread('img/bart.pgm'); % Used to test face distance
 figure; imagesc(target); colormap('gray');
 target = double(reshape(target,n_pixels,1)); % Flatten image
 
 disp('Reconstructing Faces')
 W = U'*(target - mu); % Project target image onto Eigenfaces
-face = U*W + mu; % Reconstruct face
+face = U*W; % Reconstruct face
 figure; imagesc(reshape(face,M,N)); colormap('gray');
 
 disp('Calculate distance to face space');
-face_dist = (sqrt(sum((bsxfun(@minus, sum(face_all,2), face)/n_pixels).^2)')/sqrt(K));
+face_dist = sqrt(sum((bsxfun(@minus, target - mu, face)/n_pixels).^2)')/sqrt(K);
 fprintf('Face dist: %f\n', face_dist);
 
 disp('Calculate normalized Euclidean distance');
-dist = (sqrt(sum((bsxfun(@minus, W_all, W)/n_pixels).^2)')/sqrt(K));
+dist = sqrt(sum((bsxfun(@minus, W_all, W)/n_pixels).^2)')/sqrt(K);
 
 [sorted_dist,order] = sort(dist);
 

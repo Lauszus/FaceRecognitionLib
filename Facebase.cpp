@@ -15,27 +15,24 @@
  e-mail   :  lauszus@gmail.com
 */
 
-#include <iostream>
-
 #include <Eigen/Dense> // http://eigen.tuxfamily.org
 
-#include "Eigenfaces.h"
+#include "Facebase.h"
 
-using namespace std;
 using namespace Eigen;
 
-void Eigenfaces::train(const MatrixXi &images) {
-    this->n_pixels = images.rows();
+MatrixXf Facebase::project(const MatrixXi &X) {
+    return V.transpose()*(X.cast<float>().colwise() - mu); // Project X onto subspace
+}
 
-    // Copy values from PCA
-    this->numComponents = PCA::compute(images);
-    this->V = PCA::U; // This contains all Eigenfaces
+VectorXf Facebase::euclideanDist(const VectorXf &W) {
+    return ((W_all.colwise() - W)/n_pixels).colwise().norm()/sqrt(numComponents); // Measure euclidean distance between weights
+}
 
-#ifndef NDEBUG
-    cout << "Calculate weights for all images" << endl;
-#endif
-    this->W_all = project(images); // Calculate weights
-#ifndef NDEBUG
-    cout << "W_all: " << W_all.rows() << " x " << W_all.cols() << endl;
-#endif
+VectorXf Facebase::reconstructFace(const VectorXf &W) {
+    return V*W;
+}
+
+float Facebase::euclideanDistFace(const VectorXi &X, const VectorXf &face) {
+    return ((((X.cast<float>() - mu) - face)/n_pixels).colwise().norm()/sqrt(numComponents)).value(); // Measure euclidean distance between weights
 }
