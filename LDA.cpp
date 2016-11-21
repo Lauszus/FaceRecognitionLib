@@ -57,8 +57,10 @@ int32_t LDA::compute(const MatrixXf &X, const VectorXi &classes, int32_t numComp
     cout << "numComponents: " << numComponents << endl;
 #endif // NDEBUG
 
-    if (dim == 0)
+    if (dim == 0 || numComponents == 0) {
+        U = MatrixXf::Zero(dim, 1); // Set all element to zero
         return 0; // Make sure dimension is valid
+    }
 
     VectorXf mu = X.rowwise().mean(); // Calculate the mean along each row
 
