@@ -42,6 +42,12 @@ This clearly shows the weakness of Eigenfaces, as it only maximizes the scatter 
 
 Note you need to prepare the Yale Face Database by running the [convert_yalefaces.sh](convert_yalefaces.sh) script first.
 
+## Android application
+
+This library was used for an [Android application](https://github.com/Lauszus/FaceRecognitionApp). Some screenshots can be seen below:
+
+<a href="https://github.com/Lauszus/FaceRecognitionApp"><img src="https://github.com/Lauszus/FaceRecognitionApp/raw/master/face_detected.png" width=300/><img src="https://github.com/Lauszus/FaceRecognitionApp/raw/master/navigation_menu.png" width=300/></a>
+
 ## Build instructions
 
 In order to build the C++ code and run the script you need to install [Eigen3](http://eigen.tuxfamily.org) and [ImageMagick](http://www.imagemagick.org):
