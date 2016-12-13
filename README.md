@@ -12,6 +12,12 @@ The [Eigenfaces.m](Eigenfaces.m) Matlab script was used for development and was 
 
 If you want to convert the PGM image run the [convert_pgm.sh](convert_pgm.sh) script.
 
+## Documentation
+
+Some information can be found in the [Eigenfaces_Report.pdf](docs/Eigenfaces_Report.pdf).
+
+The source is documentated using [Doxygen](http://www.stack.nl/~dimitri/doxygen). The documentation can be found at the following link: <http://lauszus.github.io/FaceRecognitionLib>.
+
 ## AT&T Facedatabase
 
 When using the code with the [AT&T Facedatabase](http://www.cl.cam.ac.uk/research/dtg/attarchive/facedatabase.html) the output looks like this:
