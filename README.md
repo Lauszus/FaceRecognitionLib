@@ -4,7 +4,7 @@
 The code is released under the GNU General Public License.
 _________
 
-This library can be used in order to calculate [Eigenfaces](http://www.face-rec.org/algorithms/PCA/jcn.pdf) and [Fisherfaces](http://www.cs.columbia.edu/~belhumeur/journal/fisherface-pami97.pdf) in C++
+This library can be used in order to calculate [Eigenfaces](http://www.face-rec.org/algorithms/PCA/jcn.pdf) and [Fisherfaces](http://www.cs.columbia.edu/~belhumeur/journal/fisherface-pami97.pdf) in C++.
 
 This Eigenfaces are calculated efficiently as described in the [paper](http://www.face-rec.org/algorithms/PCA/jcn.pdf) by M. Turk and A. Pentland.
 
@@ -14,7 +14,9 @@ If you want to convert the PGM image run the [convert_pgm.sh](convert_pgm.sh) sc
 
 ## Documentation
 
-Some information can be found in the [Eigenfaces_Report.pdf](docs/Eigenfaces_Report.pdf).
+Some information can be found in the [Eigenfaces_Report.pdf](Eigenfaces_Report.pdf).
+
+The [final project report](Final_Project_Report.pdf) describing Fisherfaces and the [Android application](#android-application) is available as well.
 
 The source is documentated using [Doxygen](http://www.stack.nl/~dimitri/doxygen). The documentation can be found at the following link: <http://lauszus.github.io/FaceRecognitionLib>.
 
