@@ -54,7 +54,7 @@ Note you need to prepare the Yale Face Database by running the [convert_yaleface
 
 This library was used for an [Android application](https://github.com/Lauszus/FaceRecognitionApp). Some screenshots can be seen below:
 
-<a href="https://github.com/Lauszus/FaceRecognitionApp"><img src="https://github.com/Lauszus/FaceRecognitionApp/raw/master/face_detected.png" width=300/><img src="https://github.com/Lauszus/FaceRecognitionApp/raw/master/navigation_menu.png" width=300/></a>
+<a href="https://github.com/Lauszus/FaceRecognitionApp"><img src="https://github.com/Lauszus/FaceRecognitionApp/raw/master/face_detected_kristian.png" width=250/><img src="https://github.com/Lauszus/FaceRecognitionApp/raw/master/face_detected_jon.png" width=250/><img src="https://github.com/Lauszus/FaceRecognitionApp/raw/master/navigation_menu.png" width= 250/></a>
 
 ## Build instructions
 
