@@ -18,6 +18,8 @@ Some information can be found in the [Eigenfaces_Report.pdf](Eigenfaces_Report.p
 
 The [final project report](Final_Project_Report.pdf) describing Fisherfaces and the [Android application](#android-application) is available as well.
 
+A short blog post can be found at the following link: <http://blog.tkjelectronics.dk/2017/07/face-recognition-using-eigenfaces-and-fisherfaces>.
+
 The source is documentated using [Doxygen](http://www.stack.nl/~dimitri/doxygen). The documentation can be found at the following link: <http://lauszus.github.io/FaceRecognitionLib>.
 
 ## AT&T Facedatabase
